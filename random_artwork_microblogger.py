@@ -101,7 +101,7 @@ def critiquing ():
 
 def mood ():
     return maybe_choose("calm", "dour", "energetic", "gloomy",
-                        "angry", "alienating" # -ed or -ing?
+                        "angry", "alienating", # -ed or -ing?
                         "amusing", "anxious", "brave",
                         "calm", "carefree", "cold",
                         "compassionate", "dejected", "depressing", "desirous",

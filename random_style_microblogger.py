@@ -22,7 +22,8 @@
 
 import random
 
-from utilities import call_one_of, choose, maybe, maybe_choose
+from utilities import call_one_of, choose, concatenate_string, maybe, \
+    maybe_choose
 import microblog_bot
 
 ################################################################################
@@ -84,9 +85,8 @@ def style ():
 
 def random_style ():
     "A possible (albeit often improbable) artistic style"
-    return ("%s %s %s" % (attitude(),
-                          call_one_of(movement, artists), 
-                          style()))
+    return concatenate_string(attitude(), call_one_of(movement, artists),
+                              style())
 
 ################################################################################
 # The bot
