@@ -14,18 +14,17 @@ class MicroblogBot(object):
 
     def __init__(self, config_path):
         """Connect to the database used to persist the bot state"""
-        self.configure(config_path)
+        self.config = yaml.load(open(config_path))
+        self.configure()
         self.conn = sqlite3.connect(self.config['database'])
         self.conn.execute('''create table if not exists bot_state
                              (name text primary key, value text)''')
         self.api = twitter_old.Api(username=self.microblog_username,
                                    password=self.microblog_password,
                                    server=self.microblog_server)
-        self.api.SetUserAgent(self.__class__.__name__)
 
-    def configure(self, config_path):
+    def configure(self):
         """Load the configuration and set up the system"""
-        self.config = yaml.load(open(config_path)) 
         self.database_path = self.config['database']
         self.microblog_server = self.config['server']
         self.microblog_username = self.config['username']
@@ -39,7 +38,8 @@ class MicroblogBot(object):
         result = self.conn.execute("select value from bot_state where name=?",
                                    (key,))
         try:
-            value = result.fetchone()[0]
+            # Stringify the buffer. For any pickled (protocol 0) values...
+            value = str(result.fetchone()[0])
         except:
             value = default
         return value
@@ -70,7 +70,6 @@ class MicroblogBot(object):
             messages = messages[::-1]
             for message in messages:
                 if message.id > last_responded_to:
-                    print message.id
                     try:
                         response = self.generate_response(message)
                         #self.api.PostUpdate(response, 
@@ -108,47 +107,54 @@ class MicroblogBot(object):
         return posting
 
 
-class MicroblogFollowerBot(object):
+class MicroblogFollowerBot(MicroblogBot):
     """A bot that follows a user and comments on their posts"""
 
     LAST_UPDATE_COMMENTED_ON = 'last_commented_on'
-    FOLLOWED_USER_ID = 'followed_user_id'
 
-    def configure(self, config_path):
+    def configure(self):
         """Load the configuration and set up the system"""
-        super(self, MicroblogFollowerBot).configure(config_path)
+        super(MicroblogFollowerBot, self).configure()
         self.microblog_follow_user = self.config['follow']
     
     def generate_comment(self, message):
         """Generate a comment on the update by the followed user"""
         return "Hi %s !" % message.user
 
+    def should_comment(self, message):
+        """Should the bot comment on the message?"""
+        return not (message.in_reply_to_user_id or
+                    (message.text.strip()[0] == "@"))
+
     def comment_on_updates(self):
         """Comment on updates posted by the followed user since bot last ran,
            or ignore all if being run for the first time to avoid flooding"""
         last_responded_to = \
             self.db_get(MicroblogFollowerBot.LAST_UPDATE_COMMENTED_ON, None)
-        followed_user = self.db_get(MicroblogFollowerBot.FOLLOWED_USER_ID, None)
-        if not followed_user:
+        if not self.microblog_follow_user:
             print "No user id specified to follow."
             sys.exit(2)
-        updates = self.api.GetReplies()
+        messages = self.api.GetUserTimeline(self.microblog_follow_user)
         if last_responded_to != None:
-            for update in updates:
-                if message.id > last_responded_to:
+            last_responded_to = int(last_responded_to)
+            # Reverse the order of messages to get oldest to newest
+            messages = messages[::-1]
+            for message in messages:
+                if (message.id > last_responded_to) and \
+                        self.should_comment(message):
                     try:
                         response = self.generate_comment(message)
                         api.PostUpdate(response, 
                                        in_reply_to_status_id=message.id)
                     except Exception, e:
-                        pass
+                        print str(e)
         # Assumes update ids increase in the list. Should use apply/max
-        new_last_responded_to = updates[-1].id
+        new_last_responded_to = messages[-1].id
         self.db_set(MicroblogFollowerBot.LAST_UPDATE_COMMENTED_ON,
                     new_last_responded_to)
 
     def run_once(self):
-        posting = super(self, MicroblogFollowerBot).run_once()
+        posting = super(MicroblogFollowerBot, self).run_once()
         if posting:
             posting = self.comment_on_updates()
         return posting

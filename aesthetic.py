@@ -279,7 +279,6 @@ def total_aesthetic_values (description, aesthetic):
     clean_artwork = description.lower()
     pos_total = 0.0
     neg_total = 0.0
-    print aesthetic
     for key, val in aesthetic.items():
         if clean_artwork.find(key) != -1:
             if val > 0.0:
@@ -291,8 +290,6 @@ def total_aesthetic_values (description, aesthetic):
 
 def describe_aesthetic_value (positive, negative):
     "Describe the value of the work allowing for pos & neg points."
-    print negative
-    print positive
     if (positive >= 2) and (negative == 0):
         result = "a masterpiece"
     elif (negative >= 2) and (positive == 0):
