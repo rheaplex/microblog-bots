@@ -61,8 +61,8 @@ class CyberneticCriticMicroblogger(microblog_bot.MicroblogFollowerBot):
                 bad = "%s..." % bad[:137]
             self.api.PostUpdate(bad)
 
-    def update_state(self):
-        """Update the aesthetic"""
+    def load_aesthetic(self):
+        """Load the aesthetic from the db, or create a new one on first run"""
         # Get the aesthetic from the DB
         self.aesthetic = self.db_get(CyberneticCriticMicroblogger.AESTHETIC)
         if self.aesthetic:
@@ -70,13 +70,18 @@ class CyberneticCriticMicroblogger(microblog_bot.MicroblogFollowerBot):
         else:
             self.aesthetic = make_aesthetic()
             self.db_set_aesthetic()
-        # Get the current and previous days
-        now = datetime.date.today()
+
+    def load_previous_time(self):
+        """Load the previous run time from the database"""
         self.previous = self.db_get(CyberneticCriticMicroblogger.CURRENT_DAY)
         if self.previous:
             self.previous = pickle.loads(self.previous)
         else:
             self.previous = datetime.date(1970, 1,1)
+
+    def update_aesthetic(self):
+        """Update the aesthetic"""
+        now = datetime.date.today()
         # This will update the aesthetic on first run. This is wasteful but ok
         if now > self.previous:
             self.db_set(CyberneticCriticMicroblogger.CURRENT_DAY, 
@@ -84,6 +89,12 @@ class CyberneticCriticMicroblogger(microblog_bot.MicroblogFollowerBot):
             update_aesthetic(self.aesthetic)
             self.db_set_aesthetic()
             self.post_aesthetic()
+
+    def update_state(self):
+        """Update the aesthetic"""
+        self.load_aesthetic()
+        self.load_previous_time()
+        self.update_aesthetic()
 
 ################################################################################
 # Main flow of execution
