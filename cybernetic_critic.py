@@ -77,7 +77,7 @@ class CyberneticCriticMicroblogger(microblog_bot.MicroblogFollowerBot):
         if self.previous:
             self.previous = pickle.loads(self.previous)
         else:
-            self.previous = datetime.date(1970, 1,1)
+            self.previous = datetime.date(1970, 1, 1)
 
     def update_aesthetic(self):
         """Update the aesthetic"""
@@ -92,8 +92,8 @@ class CyberneticCriticMicroblogger(microblog_bot.MicroblogFollowerBot):
 
     def update_state(self):
         """Update the aesthetic"""
-        self.load_aesthetic()
         self.load_previous_time()
+        self.load_aesthetic()
         self.update_aesthetic()
 
 ################################################################################
