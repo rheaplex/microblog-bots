@@ -144,8 +144,8 @@ class MicroblogFollowerBot(MicroblogBot):
                         self.should_comment(message):
                     try:
                         response = self.generate_comment(message)
-                        api.PostUpdate(response, 
-                                       in_reply_to_status_id=message.id)
+                        self.api.PostUpdate(response, 
+                                            in_reply_to_status_id=message.id)
                     except Exception, e:
                         print str(e)
         # Assumes update ids increase in the list. Should use apply/max
