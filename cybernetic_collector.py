@@ -32,9 +32,10 @@ class CyberneticCollectorMicroblogger(microblog_bot.MicroblogFollowerBot):
     """A microblog bot that buys masterpieces"""
 
     def should_comment(self, message):
-        return super(CyberneticCollectorMicroblogger,
-                     self).should_comment(message) and \
-                     (message.text.find("masterpiece") != -1)
+        # Don't call super.should_comment(), as we're commenting on a message
+        # with an in_reply_to_user_id
+        return (not (message.text.strip()[0] == "@")) and \
+            (message.text.find("masterpiece") != -1)
     
     def generate_comment(self, message):
         """Generate an aesthetic critique to post"""
