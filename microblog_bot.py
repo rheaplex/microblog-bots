@@ -29,6 +29,7 @@ class MicroblogBot(object):
         self.microblog_server = self.config['server']
         self.microblog_username = self.config['username']
         self.microblog_password = self.config['password']
+        self.ignore = config.get('ignore', '').split()
         self.run_frequency = \
             int(self.config.get('run_frequency',
                                 MicroblogBot.DEFAULT_RUN_FREQUENCY))
@@ -54,6 +55,10 @@ class MicroblogBot(object):
         """Update any state needed before running"""
         pass
 
+    def should_respond_to(self, message):
+        """Decide whether to respond to the message or not"""
+        return not message.user.screen_name in self.ignore
+
     def generate_response(self, message):
         """Generate a response to the @message"""
         return "Hi @%s !" % message.user.screen_name
@@ -69,7 +74,8 @@ class MicroblogBot(object):
             # Reverse the order of messages to get oldest to newest
             messages = messages[::-1]
             for message in messages:
-                if message.id > last_responded_to:
+                if (message.id > last_responded_to) and \
+                        and self.should_respond_to(message):
                     try:
                         response = self.generate_response(message)
                         #self.api.PostUpdate(response, 
@@ -140,8 +146,8 @@ class MicroblogFollowerBot(MicroblogBot):
             # Reverse the order of messages to get oldest to newest
             messages = messages[::-1]
             for message in messages:
-                if (message.id > last_responded_to) and \
-                        self.should_comment(message):
+                if (message.id > last_responded_to) \
+                        and self.should_comment(message):
                     try:
                         response = self.generate_comment(message)
                         self.api.PostUpdate(response, 
