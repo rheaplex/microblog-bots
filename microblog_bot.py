@@ -74,7 +74,7 @@ class MicroblogBot(object):
             # Reverse the order of messages to get oldest to newest
             messages = messages[::-1]
             for message in messages:
-                if (message.id > last_responded_to) and \
+                if (message.id > last_responded_to) \
                         and self.should_respond_to(message):
                     try:
                         response = self.generate_response(message)
