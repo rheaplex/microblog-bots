@@ -57,7 +57,7 @@ class MicroblogBot(object):
 
     def should_respond_to(self, message):
         """Decide whether to respond to the message or not"""
-        return not message.user.screen_name in self.ignore
+        return not message.in_reply_to_screen_name in self.ignore
 
     def generate_response(self, message):
         """Generate a response to the @message"""
@@ -129,7 +129,7 @@ class MicroblogFollowerBot(MicroblogBot):
 
     def should_comment(self, message):
         """Should the bot comment on the message?"""
-        return not (message.in_reply_to_user_id or
+        return not (message.in_reply_to_screen_name or
                     (message.text.strip()[0] == "@"))
 
     def comment_on_updates(self):
