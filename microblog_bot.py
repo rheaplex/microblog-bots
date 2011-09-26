@@ -29,7 +29,7 @@ class MicroblogBot(object):
         self.microblog_server = self.config['server']
         self.microblog_username = self.config['username']
         self.microblog_password = self.config['password']
-        self.ignore = config.get('ignore', '').split()
+        self.ignore = self.config.get('ignore', '').split()
         self.run_frequency = \
             int(self.config.get('run_frequency',
                                 MicroblogBot.DEFAULT_RUN_FREQUENCY))
