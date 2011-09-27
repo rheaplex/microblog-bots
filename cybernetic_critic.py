@@ -44,22 +44,22 @@ class CyberneticCriticMicroblogger(microblog_bot.MicroblogFollowerBot):
 
     def generate_comment(self, message):
         """Generate an aesthetic critique to post"""
-        return critique_artwork(message.text, self.aesthetic,
-                                "http://identi.ca/notice/%s" % message.id)
+        return critique_artwork(message['text'], self.aesthetic,
+                                "http://identi.ca/notice/%s" % message['id'])
 
     def post_aesthetic(self):
         """Post updates describing the current aesthetic"""
         good, bad = describe_aesthetic(self.aesthetic)
         desc = ' '.join((good, bad))
         if len(desc) <= 140:
-            self.api.PostUpdate(desc)
+            self.api.statuses_update(desc)
         else:
             if len(good) > 140:
                 good = "%s..." % good[:137]
-            self.api.PostUpdate(good)
+            self.api.statuses_update(good)
             if len(bad) > 140:
                 bad = "%s..." % bad[:137]
-            self.api.PostUpdate(bad)
+            self.api.statuses_update(bad)
 
     def load_aesthetic(self):
         """Load the aesthetic from the db, or create a new one on first run"""

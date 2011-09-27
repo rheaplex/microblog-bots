@@ -34,11 +34,11 @@ class CyberneticCollectorMicroblogger(microblog_bot.MicroblogFollowerBot):
     def should_comment(self, message):
         # Don't call super.should_comment(), as we're commenting on a message
         # with an in_reply_to_user_id
-        return message.text.find("is a masterpiece") != -1
+        return message['text']find("is a masterpiece") != -1
     
     def generate_comment(self, message):
         """Generate an aesthetic critique to post"""
-        url = re.search("(http://[^ ]+)", message.text).group(1)
+        url = re.search("(http://[^ ]+)", message['text']).group(1)
         return "I just bought %s" % url
 
 ################################################################################

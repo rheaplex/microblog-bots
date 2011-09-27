@@ -3,8 +3,7 @@ import yaml
 import sqlite3
 import sys
 
-# Use an old version of python-twitter so we can access identi.ca via basic auth
-import twitter_old
+import statusnet
 
 class MicroblogBot(object):
     """A bot that periodically posts updates and responds to @messages"""
@@ -19,9 +18,9 @@ class MicroblogBot(object):
         self.conn = sqlite3.connect(self.config['database'])
         self.conn.execute('''create table if not exists bot_state
                              (name text primary key, value text)''')
-        self.api = twitter_old.Api(username=self.microblog_username,
-                                   password=self.microblog_password,
-                                   server=self.microblog_server)
+        self.api = statusnet.StatusNet(self.microblog_server,
+                                       username=self.microblog_username,
+                                       password=self.microblog_password)
 
     def configure(self):
         """Load the configuration and set up the system"""
@@ -57,36 +56,36 @@ class MicroblogBot(object):
 
     def should_respond_to(self, message):
         """Decide whether to respond to the message or not"""
-        return not message.in_reply_to_screen_name in self.ignore
+        return not message['in_reply_to_screen_name'] in self.ignore
 
     def generate_response(self, message):
         """Generate a response to the @message"""
-        return "Hi @%s !" % message.user.screen_name
+        return "Hi @%s !" % message['user']['screen_name']
 
     def respond_to_messages(self):
         """Respond to messages sent since the bot last ran,
            or ignore all if being run for the first time to avoid flooding."""
         last_responded_to = self.db_get(MicroblogBot.LAST_MESSAGE_RESPONDED_TO,
                                         None)
-        messages = self.api.GetReplies()
-        if last_responded_to != None:
-            last_responded_to = int(last_responded_to)
-            # Reverse the order of messages to get oldest to newest
-            messages = messages[::-1]
-            for message in messages:
-                if (message.id > last_responded_to) \
-                        and self.should_respond_to(message):
-                    try:
-                        response = self.generate_response(message)
-                        #self.api.PostUpdate(response, 
-                        #               in_reply_to_status_id=message.id)
-                        print response
-                    except Exception, e:
-                        pass
-        # Assumes message ids increase in the list. Should use apply/max
-        new_last_responded_to = max([message.id for message in messages])
-        self.db_set(MicroblogBot.LAST_MESSAGE_RESPONDED_TO,
-                    new_last_responded_to)
+        messages = self.api.statuses_replies(since_id=last_responded_to)
+        if messages:
+            if last_responded_to != None:
+                last_responded_to = int(last_responded_to)
+                # Reverse the order of messages to get oldest to newest
+                messages = messages[::-1]
+                for message in messages:
+                    if (message['id'] > last_responded_to) \
+                            and self.should_respond_to(message):
+                        try:
+                            response = self.generate_response(message)
+                            #self.api.statuses_update(response, 
+                            #               in_reply_to_status_id=message['id'])
+                            print response
+                        except Exception, e:
+                            pass
+            new_last_responded_to = max([message['id'] for message in messages])
+            self.db_set(MicroblogBot.LAST_MESSAGE_RESPONDED_TO,
+                        new_last_responded_to)
 
     def generate_update(self):
         """Generate a message to be posted as an update"""
@@ -96,7 +95,7 @@ class MicroblogBot(object):
         """Generate a message and post it as an update"""
         update = self.generate_update()
         if update:
-            self.api.PostUpdate(update)
+            self.api.statuses_update(update)
 
     def should_post(self):
         """Should the bot generate a new post?"""
@@ -129,8 +128,8 @@ class MicroblogFollowerBot(MicroblogBot):
 
     def should_comment(self, message):
         """Should the bot comment on the message?"""
-        return not (message.in_reply_to_screen_name or
-                    (message.text.strip()[0] == "@"))
+        return not (message['in_reply_to_screen_name'] or
+                    (message['text'].strip()[0] == "@"))
 
     def comment_on_updates(self):
         """Comment on updates posted by the followed user since bot last ran,
@@ -140,24 +139,26 @@ class MicroblogFollowerBot(MicroblogBot):
         if not self.microblog_follow_user:
             print "No user id specified to follow."
             sys.exit(2)
-        messages = self.api.GetUserTimeline(self.microblog_follow_user)
-        if last_responded_to != None:
-            last_responded_to = int(last_responded_to)
-            # Reverse the order of messages to get oldest to newest
-            messages = messages[::-1]
-            for message in messages:
-                if (message.id > last_responded_to) \
-                        and self.should_comment(message):
-                    try:
-                        response = self.generate_comment(message)
-                        self.api.PostUpdate(response, 
-                                            in_reply_to_status_id=message.id)
-                    except Exception, e:
-                        print str(e)
-        # Assumes update ids increase in the list. Should use apply/max
-        new_last_responded_to = messages[-1].id
-        self.db_set(MicroblogFollowerBot.LAST_UPDATE_COMMENTED_ON,
-                    new_last_responded_to)
+        messages = self.api.statuses_user_timeline(\
+            screen_name=self.microblog_follow_user,
+            since_id=last_responded_to)
+        if messages:
+            if last_responded_to != None:
+                last_responded_to = int(last_responded_to)
+                # Reverse the order of messages to get oldest to newest
+                messages = messages[::-1]
+                for message in messages:
+                    if (message['id'] > last_responded_to) \
+                            and self.should_comment(message):
+                        try:
+                            response = self.generate_comment(message)
+                            self.api.statuses_update(response,
+                                                     in_reply_to_status_id=message['id'])
+                        except Exception, e:
+                            print str(e)
+            new_last_responded_to = max([message['id'] for message in messages])
+            self.db_set(MicroblogFollowerBot.LAST_UPDATE_COMMENTED_ON,
+                        new_last_responded_to)
 
     def run_once(self):
         posting = super(MicroblogFollowerBot, self).run_once()
