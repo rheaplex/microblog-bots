@@ -56,7 +56,7 @@ class MicroblogBot(object):
 
     def should_respond_to(self, message):
         """Decide whether to respond to the message or not"""
-        return not message['in_reply_to_screen_name'] in self.ignore
+        return not (message['user']['screen_name'] in self.ignore)
 
     def generate_response(self, message):
         """Generate a response to the @message"""
