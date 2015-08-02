@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
 # cybernetic_critic.py - Post aesthetic critiques.
-# Copyright (C) 2011  Rhea Myers rhea@myers.studio
+# Copyright (C) 2011, 2015 Rhea Myers rhea@myers.studio
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or 
+# the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -52,14 +52,14 @@ class CyberneticCriticMicroblogger(microblog_bot.MicroblogFollowerBot):
         good, bad = describe_aesthetic(self.aesthetic)
         desc = ' '.join((good, bad))
         if len(desc) <= 140:
-            self.api.statuses_update(desc)
+            self.api.PostUpdate(desc)
         else:
             if len(good) > 140:
                 good = "%s..." % good[:137]
-            self.api.statuses_update(good)
+            self.api.PostUpdate(good)
             if len(bad) > 140:
                 bad = "%s..." % bad[:137]
-            self.api.statuses_update(bad)
+            self.api.PostUpdate(bad)
 
     def load_aesthetic(self):
         """Load the aesthetic from the db, or create a new one on first run"""
@@ -84,7 +84,7 @@ class CyberneticCriticMicroblogger(microblog_bot.MicroblogFollowerBot):
         now = datetime.date.today()
         # This will update the aesthetic on first run. This is wasteful but ok
         if now > self.previous:
-            self.db_set(CyberneticCriticMicroblogger.CURRENT_DAY, 
+            self.db_set(CyberneticCriticMicroblogger.CURRENT_DAY,
                         pickle.dumps(now, 0))
             update_aesthetic(self.aesthetic)
             self.db_set_aesthetic()
