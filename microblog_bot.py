@@ -93,9 +93,9 @@ class MicroblogBot(object):
                             and self.should_respond_to(message):
                         try:
                             response = self.generate_response(message)
-                            #self.api.statuses_update(response,
-                            #               in_reply_to_status_id=message['id'])
-                            print response
+                            self.api.PostUpdate(response,
+                                                in_reply_to_status_id=\
+                                                    message['id'])
                         except Exception, e:
                             pass
             new_last_responded_to = max([message['id'] for message in messages])
@@ -154,7 +154,7 @@ class MicroblogFollowerBot(MicroblogBot):
         if not self.microblog_follow_user:
             print "No user id specified to follow."
             sys.exit(2)
-        messages = self.api.statuses_user_timeline(\
+        messages = self.api.GetUserTimeline(\
             screen_name=self.microblog_follow_user,
             since_id=last_responded_to)
         if messages:
@@ -167,8 +167,9 @@ class MicroblogFollowerBot(MicroblogBot):
                             and self.should_comment(message):
                         try:
                             response = self.generate_comment(message)
-                            self.api.statuses_update(response,
-                                                     in_reply_to_status_id=message['id'])
+                            self.api.PostUpdate(response,
+                                                in_reply_to_status_id=\
+                                                    message['id'])
                         except Exception, e:
                             print str(e)
             new_last_responded_to = max([message['id'] for message in messages])
