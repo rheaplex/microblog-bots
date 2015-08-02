@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # cybernetic_collector.py - Buy masterpieces.
-# Copyright (C) 2011 Rhea Myers rhea@myers.studio
+# Copyright (C) 2011, 2015 Rhea Myers rhea@myers.studio
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -34,11 +34,11 @@ class CyberneticCollectorMicroblogger(microblog_bot.MicroblogFollowerBot):
     def should_comment(self, message):
         # Don't call super.should_comment(), as we're commenting on a message
         # with an in_reply_to_user_id
-        return message['text'].find("is a masterpiece") != -1
-    
+        return message.text.find("is a masterpiece") != -1
+
     def generate_comment(self, message):
         """Generate an aesthetic critique to post"""
-        url = re.search("(http://[^ ]+)", message['text']).group(1)
+        url = re.search("(http://[^ ]+)", message.text).group(1)
         return "I just bought %s" % url
 
 ################################################################################

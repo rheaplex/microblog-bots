@@ -1,5 +1,5 @@
 # aesthetic.py - Generate and evaluate aesthetic descriptions.
-# Copyright (C) 2011  Rhea Myers rhea@myers.studio
+# Copyright (C) 2011 Rhea Myers rhea@myers.studio
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -174,11 +174,11 @@ def make_properties (count):
 
 def add_properties (properties):
     "Add zero or more properties."
-    new_props = make_properties(min(max(MIN_PROPERTIES, 
+    new_props = make_properties(min(max(MIN_PROPERTIES,
                                         random.randint(MAX_PROPERTIES_TO_ADD))
                                     (- MAX_PROPERTIES, len(properties))))
     return properties + new_props
-    
+
 def delete_properties (properties):
     "Delete 0+ properties, don't reduce properties below +min_properties+."
     end = max(len(properties) - random.randint(MAX_PROPERTIES_TO_MUTATE),

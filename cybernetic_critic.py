@@ -44,8 +44,8 @@ class CyberneticCriticMicroblogger(microblog_bot.MicroblogFollowerBot):
 
     def generate_comment(self, message):
         """Generate an aesthetic critique to post"""
-        return critique_artwork(message['text'], self.aesthetic,
-                                "http://identi.ca/notice/%s" % message['id'])
+        return critique_artwork(message.text, self.aesthetic,
+                                "https://twitter.com/statuses/%s" % message.id)
 
     def post_aesthetic(self):
         """Post updates describing the current aesthetic"""
