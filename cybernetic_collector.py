@@ -38,7 +38,7 @@ class CyberneticCollectorMicroblogger(microblog_bot.MicroblogFollowerBot):
 
     def generate_comment(self, message):
         """Generate an aesthetic critique to post"""
-        url = re.search("(http://[^ ]+)", message.text).group(1)
+        url = re.search("(https://[^ ]+)", message.text).group(1)
         return "I just bought %s" % url
 
 ################################################################################
