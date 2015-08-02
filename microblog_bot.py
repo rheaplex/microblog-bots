@@ -98,7 +98,7 @@ class MicroblogBot(object):
                                                     message.id)
                         except Exception, e:
                             pass
-            new_last_responded_to = max(message.id for message in messages])
+            new_last_responded_to = max([message.id for message in messages])
             self.db_set(MicroblogBot.LAST_MESSAGE_RESPONDED_TO,
                         new_last_responded_to)
 
