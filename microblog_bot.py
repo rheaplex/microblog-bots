@@ -3,31 +3,30 @@ import yaml
 import sqlite3
 import sys
 
-import statusnet
+import twitter
 
 class MicroblogBot(object):
     """A bot that periodically posts updates and responds to @messages"""
-    
+
     LAST_MESSAGE_RESPONDED_TO = 'last_message_responded_to'
     DEFAULT_RUN_FREQUENCY = 1
 
     def __init__(self, config_path):
         """Connect to the database used to persist the bot state"""
         self.config = yaml.load(open(config_path))
-        self.configure()
-        self.conn = sqlite3.connect(self.config['database'])
+        self.database_path = self.config['database']
+        self.conn = sqlite3.connect(self.database_path)
         self.conn.execute('''create table if not exists bot_state
                              (name text primary key, value text)''')
-        self.api = statusnet.StatusNet(self.microblog_server,
-                                       username=self.microblog_username,
-                                       password=self.microblog_password)
+        self.api = twitter.Api(consumer_key=self.config['consumer_key'],
+                               consumer_secret=self.config['consumer_secret'],
+                               access_token_key=self.config['access_token'],
+                               access_token_secret=\
+                                   self.config['access_token_secret'])
+        self.configure()
 
     def configure(self):
         """Load the configuration and set up the system"""
-        self.database_path = self.config['database']
-        self.microblog_server = self.config['server']
-        self.microblog_username = self.config['username']
-        self.microblog_password = self.config['password']
         self.ignore = self.config.get('ignore', '').split()
         self.run_frequency = \
             int(self.config.get('run_frequency',
@@ -67,7 +66,7 @@ class MicroblogBot(object):
            or ignore all if being run for the first time to avoid flooding."""
         last_responded_to = self.db_get(MicroblogBot.LAST_MESSAGE_RESPONDED_TO,
                                         None)
-        messages = self.api.statuses_replies(since_id=last_responded_to)
+        messages = self.api.GetMentions(since_id=last_responded_to)
         if messages:
             if last_responded_to != None:
                 last_responded_to = int(last_responded_to)
@@ -78,7 +77,7 @@ class MicroblogBot(object):
                             and self.should_respond_to(message):
                         try:
                             response = self.generate_response(message)
-                            #self.api.statuses_update(response, 
+                            #self.api.statuses_update(response,
                             #               in_reply_to_status_id=message['id'])
                             print response
                         except Exception, e:
@@ -95,7 +94,7 @@ class MicroblogBot(object):
         """Generate a message and post it as an update"""
         update = self.generate_update()
         if update:
-            self.api.statuses_update(update)
+            self.api.PostUpdate(update)
 
     def should_post(self):
         """Should the bot generate a new post?"""
@@ -121,7 +120,7 @@ class MicroblogFollowerBot(MicroblogBot):
         """Load the configuration and set up the system"""
         super(MicroblogFollowerBot, self).configure()
         self.microblog_follow_user = self.config['follow']
-    
+
     def generate_comment(self, message):
         """Generate a comment on the update by the followed user"""
         return "Hi %s !" % message.user
